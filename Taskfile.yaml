@@ -12,7 +12,7 @@ dotenv: [".env"]
 tasks:
   default:
     cmds:
-      - go-task -l
+      - task -l
     silent: true
 
   build:
@@ -28,20 +28,21 @@ tasks:
         [ -d orin_nx_JP5_1_bsp ] || tar xf orin_nx_JP5_1_bsp.tar.xz
         cd ..
         cd ${RUNTIME}
-        tar xf ../downloads/Jetson_Linux_R${VERSION}_aarch64.tbz2 
+        tar -x -f ../downloads/Jetson_Linux_R${VERSION}_aarch64.tbz2 
         cd Linux_for_Tegra/rootfs/
-        sudo tar xpf ../../../downloads/Tegra_Linux_Sample-Root-Filesystem_R${VERSION}_aarch64.tbz2
+        sudo tar -x -p -f ../../../downloads/Tegra_Linux_Sample-Root-Filesystem_R${VERSION}_aarch64.tbz2
         cd .. # sono in Linux_for_Tegra
         sudo ./tools/l4t_flash_prerequisites.sh
         # customizzazione DSBOARD-ORNX come da https://www.forecr.io/blogs/installation/jetpack-5-1-installation-for-dsboard-ornx
         ORIG=../../downloads/orin_nx_JP5_1_bsp
-        sudo cp -v $ORIG/jetson-orin-nx-devkit-16gb.conf .
-        sudo cp -v $ORIG/p3768-0000+p3767-0000.conf .
-        sudo cp -v $ORIG/Image ./kernel
-        sudo cp -v $ORIG/tegra234-p*.dtb* ./kernel/dtb
-        sudo cp -v $ORIG/*gpio* ./kernel/bootloader
-        sudo cp -v $ORIG/tegra234-b*.dtb* ./bootloader/t186ref
-        sudo cp -v $ORIG/*pinmux* ./bootloader/t186ref/BCT
+        # sudo cp -v $ORIG/jetson-orin-nx-devkit-16gb.conf .
+        # sudo cp -v $ORIG/p3768-0000+p3767-0000.conf .
+        # sudo cp -v $ORIG/Image ./kernel
+        # sudo cp -v $ORIG/tegra234-p*.dtb* ./kernel/dtb
+        # sudo cp -v $ORIG/*gpio* ./kernel/bootloader
+        # sudo cp -v $ORIG/tegra234-b*.dtb* ./bootloader/t186ref
+        # sudo cp -v $ORIG/*pinmux* ./bootloader/t186ref/BCT
+        # sudo cp -v $ORIG/*padvoltage* ./bootloader/t186ref/BCT
       - task: apply-binaries
 
   clean:
@@ -55,8 +56,8 @@ tasks:
         cd ${RUNTIME}/Linux_for_Tegra
         sudo ./apply_binaries.sh
         sudo cp -v ../../downloads/orin_nx_JP5_1_bsp/*.ko ./rootfs/usr/lib/modules/5.*/kernel/drivers/gpu/nvgpu/nvgpu.ko
-        sudo sed -i "s/cvb_eeprom_read_size = <0x100>/cvb_eeprom_read_size = <0x0>;/g" ./bootloader/t186ref/BCT/tegra234-mb2-bct-misc-p3767-0000.dts
-        sudo sed -i "s/ODMDATA=\"gbe-uphy-config-8,hsstp-lane-map-3,hsio-uphy-config-0\";/ODMDATA=\"gbe-uphy-config-9,hsstp-lane-map-3,hsio-uphy-config-0\";/g" ./p3767.conf.common
+        # sudo sed -i "s/cvb_eeprom_read_size = <0x100>/cvb_eeprom_read_size = <0x0>/g" ./bootloader/t186ref/BCT/tegra234-mb2-bct-misc-p3767-0000.dts
+        # sudo sed -i "s/ODMDATA=\"gbe-uphy-config-8,hsstp-lane-map-3,hsio-uphy-config-0\";/ODMDATA=\"gbe-uphy-config-9,hsstp-lane-map-3,hsio-uphy-config-0\";/g" ./p3767.conf.common
 
   customize:
     desc: customize rootfs
