@@ -9,7 +9,6 @@ virtual machine with ubuntu 20.04 server
 
 ```
 sudo snap install task --classic
-sudo apt install pbzip2
 
 ```
 
