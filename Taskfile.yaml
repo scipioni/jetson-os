@@ -69,6 +69,7 @@ tasks:
   os:build:
     desc: build os
     cmds:
+      - task: customize
       - |
         cd ${RUNTIME}/Linux_for_Tegra
         sudo ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --external-device nvme0n1p1 \
@@ -81,3 +82,10 @@ tasks:
       - |
         cd ${RUNTIME}/Linux_for_Tegra/bootloader 
         sudo bash ./flashcmd.txt
+
+  os:backup:
+    desc: backup carrier board
+    cmds:
+      - |
+        cd ${RUNTIME}/Linux_for_Tegra
+        sudo ./tools/backup_restore/l4t_backup_restore.sh -b ${CONFIG}
