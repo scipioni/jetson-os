@@ -52,6 +52,6 @@ tasks:
         --downloadfolder $HOME/Downloads/nvidia/sdkm_downloads/ \
         --flash skip
         #- docker compose run sdkmanager --cli install --responsefile /sdkm_responsefile_jetson.ini
-        ln -sf $HOME/nvidia/nvidia_sdk/JetPack_${JETPACK_VERSION}_Linux_${TARGET}/Linux_for_Tegra/ /home/nvidia/tegra
+        #ln -sf $HOME/nvidia/nvidia_sdk/JetPack_${JETPACK_VERSION}_Linux_${TARGET}/Linux_for_Tegra/ /home/nvidia/tegra
 
         # sdkmanager --cli install --logintype devzone --product Jetson --version 5.1 --targetos Linux --host --target JETSON_AGX_ORIN_TARGETS --flash all --additionalsdk 'DeepStream 6.2'
