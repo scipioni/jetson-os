@@ -1,3 +1,4 @@
 /runtime
 .env
 /downloads
+/log

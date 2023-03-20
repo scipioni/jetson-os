@@ -1,0 +1,91 @@
+# https://taskfile.dev
+
+version: '3'
+
+dotenv: [".env"]
+
+# vars:
+#   BOARD: p3509-a02+p3767-0000
+#   RUNTIME: ${RUNTIME}
+#   VERSION: R35.2.1
+
+tasks:
+  default:
+    cmds:
+      - task -l
+    silent: true
+
+  build:
+    desc: create working sdk
+    cmds:
+      - task: clean
+      - |
+        sudo systemctl stop udisks2.service
+        mkdir -p ${RUNTIME} downloads
+        cd downloads
+        [ -f Jetson_Linux_R35.2.1_aarch64.tbz2 ] || wget --content-disposition https://developer.nvidia.com/downloads/jetson-linux-r3521-aarch64tbz2
+        [ -f Tegra_Linux_Sample-Root-Filesystem_R35.2.1_aarch64.tbz2 ] || wget --content-disposition https://developer.nvidia.com/downloads/linux-sample-root-filesystem-r3521aarch64tbz2
+        [ -f orin_nx_JP5_1_bsp.tar.xz ] || wget https://github.com/mistelektronik/dsboard_ornx_orin_nx_bsp/raw/master/orin_nx_JP5_1_bsp.tar.xz
+        [ -d orin_nx_JP5_1_bsp ] || tar xf orin_nx_JP5_1_bsp.tar.xz
+        cd ..
+        cd ${RUNTIME}
+        tar -x -f ../downloads/Jetson_Linux_R${VERSION}_aarch64.tbz2 
+        cd Linux_for_Tegra/rootfs/
+        sudo tar -x -p -f ../../../downloads/Tegra_Linux_Sample-Root-Filesystem_R${VERSION}_aarch64.tbz2
+        cd .. # sono in Linux_for_Tegra
+        sudo ./tools/l4t_flash_prerequisites.sh
+        # custom BSP DSBOARD-ORNX as https://www.forecr.io/blogs/installation/jetpack-5-1-installation-for-dsboard-ornx
+        ORIG=../../downloads/orin_nx_JP5_1_bsp
+        sudo cp -v $ORIG/p3768-0000+p3767-0000.conf .
+        sudo cp -av $ORIG/jetson-orin-nx-devkit-16gb.conf . # this is a symbolic link
+        sudo cp -v $ORIG/Image ./kernel
+        sudo cp -v $ORIG/tegra234-p*.dtb* ./kernel/dtb
+        sudo cp -v $ORIG/*gpio* ./kernel/bootloader
+        sudo cp -v $ORIG/tegra234-b*.dtb* ./bootloader/t186ref
+        sudo cp -v $ORIG/tegra234-mb1-bct-p* bootloader/t186ref/BCT/
+      - task: apply-binaries
+
+  clean:
+    cmds:
+      - sudo rm -fR ${RUNTIME}
+
+  apply-binaries:
+    cmds:
+      - |
+        #sudo rm -f ${RUNTIME}/Linux_for_Tegra/rootfs/dev/random ${RUNTIME}/Linux_for_Tegra/rootfs/dev/urandom
+        cd ${RUNTIME}/Linux_for_Tegra
+        sudo ./apply_binaries.sh
+        sudo cp -v ../../downloads/orin_nx_JP5_1_bsp/*.ko ./rootfs/usr/lib/modules/5.*/kernel/drivers/gpu/nvgpu
+        sudo sed -i "s/cvb_eeprom_read_size = <0x100>;/cvb_eeprom_read_size = <0x0>;/g" ./bootloader/t186ref/BCT/tegra234-mb2-bct-misc-p3767-0000.dts
+        sudo sed -i "s/ODMDATA=\"gbe-uphy-config-8,hsstp-lane-map-3,hsio-uphy-config-0\";/ODMDATA=\"gbe-uphy-config-9,hsstp-lane-map-3,hsio-uphy-config-0\";/g" ./p3767.conf.common
+
+  customize:
+    desc: customize rootfs
+    cmds:
+      - |
+        cd ${RUNTIME}/Linux_for_Tegra
+        sudo ./tools/l4t_create_default_user.sh -u ubuntu -p ubuntu -a -n orin --accept-license
+
+  os:build:
+    desc: build os
+    cmds:
+      - task: customize
+      - |
+        cd ${RUNTIME}/Linux_for_Tegra
+        sudo ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --external-device nvme0n1p1 \
+          -c tools/kernel_flash/flash_l4t_external.xml -p "-c bootloader/t186ref/cfg/flash_t234_qspi.xml" \
+          --showlogs --network usb0 ${CONFIG} internal
+
+  os:flash:
+    desc: flash
+    cmds:
+      - |
+        cd ${RUNTIME}/Linux_for_Tegra/bootloader 
+        sudo bash ./flashcmd.txt
+
+  os:backup:
+    desc: backup carrier board
+    cmds:
+      - |
+        cd ${RUNTIME}/Linux_for_Tegra
+        sudo ./tools/backup_restore/l4t_backup_restore.sh -b ${CONFIG}
