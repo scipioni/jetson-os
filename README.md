@@ -19,22 +19,26 @@ sudo snap install task --classic
 
 
 ## sdkmanager
-s
 
-download sdkmanager_1.9.2-10884_amd64.deb and install
+download sdkmanager_1.9.2-10884_amd64.deb in /tmp and install
 ```
 sudo dpkg -i /tmp/sdkmanager_1.9.2-10884_amd64.deb
 sudo apt -f install
 ```
 
-show args
+login to nvidia devzone
 ```
-task show-args
+task login
 ```
 
-download files
+download JetPack 5.1 (rev. 1) Linux for Jetson AGX Orin modules files into ~/Downloads/nvidia/sdkm_downloads/
 ```
 task download
+```
+
+build image
+```
+task build
 ```
 
 
